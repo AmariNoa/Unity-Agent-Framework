@@ -15,3 +15,4 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Editor-side agent HTTP core: editor state tracking, serial main-thread dispatcher, session bearer token, instance descriptor file, and a localhost-only HTTP server (status / tools / invoke) with 401/503 handling
 - Tool registry with provider registration, [AgentToolProvider] discovery, canonical id / alias collision rejection, permission gate (mutation-derived levels, confirm / dryRun convention) and standard pagination
 - Built-in read-only tools: unity.project.info, unity.scene.list, unity.object.inspect, unity.selection.get, unity.console.get
+- Gateway installation check with console guidance and README setup instructions
