@@ -10,5 +10,8 @@
     "url": "https://amari-noa.com/"
   },
   "url": "https://amarinoa.github.io/AmariNoa-VPM-Listing/",
-  "repo": "https://amarinoa.github.io/AmariNoa-VPM-Listing/index.json"
+  "repo": "https://amarinoa.github.io/AmariNoa-VPM-Listing/index.json",
+  "dependencies": {
+    "com.unity.nuget.newtonsoft-json": "3.2.1"
+  }
 }
