@@ -1,3 +1,5 @@
+#nullable enable
+
 using System.Collections.Generic;
 
 namespace com.amari_noa.unity_agent_framework.sdk.contracts
@@ -35,23 +37,23 @@ namespace com.amari_noa.unity_agent_framework.sdk.contracts
     public sealed class AgentToolDescriptor
     {
         /// <summary>Canonical tool id, e.g. unity.scene.list (naming rules: design doc decision 4).</summary>
-        public string Id { get; set; }
+        public string? Id { get; set; }
 
-        public string Description { get; set; }
+        public string? Description { get; set; }
 
-        public List<string> Tags { get; set; }
+        public List<string>? Tags { get; set; }
 
         /// <summary>Provider id (ProviderInfo.Id).</summary>
-        public string Provider { get; set; }
+        public string? Provider { get; set; }
 
         /// <summary>Providing package id.</summary>
-        public string PackageId { get; set; }
+        public string? PackageId { get; set; }
 
         /// <summary>Canonical JSON Schema (draft 2020-12) text for the input.</summary>
-        public string InputSchemaJson { get; set; }
+        public string? InputSchemaJson { get; set; }
 
         /// <summary>Canonical JSON Schema (draft 2020-12) text for the output.</summary>
-        public string OutputSchemaJson { get; set; }
+        public string? OutputSchemaJson { get; set; }
 
         public AgentToolExecutionContext ExecutionContext { get; set; }
 
@@ -63,11 +65,11 @@ namespace com.amari_noa.unity_agent_framework.sdk.contracts
 
         public bool Undoable { get; set; }
 
-        public List<string> Capabilities { get; set; }
+        public List<string>? Capabilities { get; set; }
 
         public AgentToolExportPolicy ExportPolicy { get; set; }
 
         /// <summary>Alias per external surface: "mcp" / "unityPipeline" / "cli" -> alias name.</summary>
-        public Dictionary<string, string> ExternalAliases { get; set; }
+        public Dictionary<string, string>? ExternalAliases { get; set; }
     }
 }

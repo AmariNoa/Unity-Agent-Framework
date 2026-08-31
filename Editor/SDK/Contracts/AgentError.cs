@@ -1,3 +1,5 @@
+#nullable enable
+
 using System.Collections.Generic;
 
 namespace com.amari_noa.unity_agent_framework.sdk.contracts
@@ -8,19 +10,19 @@ namespace com.amari_noa.unity_agent_framework.sdk.contracts
     public sealed class AgentError
     {
         /// <summary>Machine readable code in SCREAMING_SNAKE_CASE. See <see cref="AgentErrorCodes"/>.</summary>
-        public string Code { get; set; }
+        public string? Code { get; set; }
 
         /// <summary>Human readable message (English).</summary>
-        public string Message { get; set; }
+        public string? Message { get; set; }
 
         /// <summary>Provider id the error originated from ("core" when raised by the core).</summary>
-        public string Provider { get; set; }
+        public string? Provider { get; set; }
 
         /// <summary>Whether a retry may resolve the error (EDITOR_BUSY etc.).</summary>
         public bool Retryable { get; set; }
 
         /// <summary>Extension data (installedVersion, supportedVersions, ...).</summary>
-        public Dictionary<string, object> Details { get; set; }
+        public Dictionary<string, object>? Details { get; set; }
     }
 
     /// <summary>Standard error codes. Provider specific codes may be added in SCREAMING_SNAKE_CASE.</summary>

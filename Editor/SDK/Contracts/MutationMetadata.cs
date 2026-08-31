@@ -1,3 +1,5 @@
+#nullable enable
+
 using System.Collections.Generic;
 
 namespace com.amari_noa.unity_agent_framework.sdk.contracts
@@ -11,11 +13,11 @@ namespace com.amari_noa.unity_agent_framework.sdk.contracts
         /// <summary>True when the invocation was a dry run (validate / preview only).</summary>
         public bool DryRun { get; set; }
 
-        public List<AgentObjectRef> Created { get; set; }
+        public List<AgentObjectRef>? Created { get; set; }
 
-        public List<AgentObjectRef> Modified { get; set; }
+        public List<AgentObjectRef>? Modified { get; set; }
 
-        public List<AgentObjectRef> Deleted { get; set; }
+        public List<AgentObjectRef>? Deleted { get; set; }
 
         /// <summary>Unity undo group id when the execution was undoable.</summary>
         public int? UndoGroup { get; set; }

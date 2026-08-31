@@ -1,3 +1,5 @@
+#nullable enable
+
 using System;
 
 namespace com.amari_noa.unity_agent_framework.sdk.contracts
@@ -19,7 +21,7 @@ namespace com.amari_noa.unity_agent_framework.sdk.contracts
         public float? Ratio { get; set; }
 
         /// <summary>Human readable description of the current step.</summary>
-        public string Message { get; set; }
+        public string? Message { get; set; }
 
         public int? CurrentStep { get; set; }
 
@@ -34,14 +36,14 @@ namespace com.amari_noa.unity_agent_framework.sdk.contracts
     public sealed class AgentJobInfo
     {
         /// <summary>GUID string.</summary>
-        public string JobId { get; set; }
+        public string? JobId { get; set; }
 
-        public string ToolId { get; set; }
+        public string? ToolId { get; set; }
 
         public AgentJobStatus Status { get; set; }
 
         /// <summary>Only while Running; omitted from JSON when null.</summary>
-        public AgentProgress Progress { get; set; }
+        public AgentProgress? Progress { get; set; }
 
         public DateTimeOffset CreatedAt { get; set; }
 
