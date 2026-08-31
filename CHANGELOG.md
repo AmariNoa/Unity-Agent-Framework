@@ -9,6 +9,5 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
-- Package scaffold (package.json, docs)
-- docs/architecture.md: applied review fixes (package id / license fixed, SDK boundary consistency, NDMF common layer, operational notes)
-- Assembly definition scaffold: Editor/{SDK,Core,Gateway,Official} and Tests/Editor/{SDK,Core,Gateway,Official} asmdefs with meta files (per docs/architecture.md sections 77 and 94)
+- Package scaffold (package.json, README, CHANGELOG, LICENSE)
+- Assembly definition scaffold: Editor/{SDK,Core,Gateway,Official} and Tests/Editor/{SDK,Core,Gateway,Official} asmdefs with meta files
