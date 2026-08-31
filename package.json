@@ -1,0 +1,14 @@
+{
+  "name": "com.amari-noa.unity-agent-framework",
+  "displayName": "Unity Agent Framework",
+  "version": "0.1.0-alpha.1",
+  "unity": "2022.3",
+  "license": "MIT",
+  "description": "AI agent integration framework for Unity Editor. Exposes Unity Editor operations and Unity package tools to external AI agents (Claude Code, Codex, and other MCP clients) through an external gateway, a tool registry, and an adapter system.",
+  "author": {
+    "name": "Amari Noa",
+    "url": "https://amari-noa.com/"
+  },
+  "url": "https://amarinoa.github.io/AmariNoa-VPM-Listing/",
+  "repo": "https://amarinoa.github.io/AmariNoa-VPM-Listing/index.json"
+}

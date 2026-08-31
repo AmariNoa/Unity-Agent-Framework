@@ -1,0 +1,16 @@
+{
+    "name": "com.amari-noa.unity-agent-framework.sdk",
+    "rootNamespace": "com.amari_noa.unity_agent_framework.sdk",
+    "references": [],
+    "includePlatforms": [
+        "Editor"
+    ],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": true,
+    "defineConstraints": [],
+    "versionDefines": [],
+    "noEngineReferences": false
+}

@@ -1,0 +1,19 @@
+{
+    "name": "com.amari-noa.unity-agent-framework.gateway.editor",
+    "rootNamespace": "com.amari_noa.unity_agent_framework.gateway.editor",
+    "references": [
+        "com.amari-noa.unity-agent-framework.sdk",
+        "com.amari-noa.unity-agent-framework.core.editor"
+    ],
+    "includePlatforms": [
+        "Editor"
+    ],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": true,
+    "defineConstraints": [],
+    "versionDefines": [],
+    "noEngineReferences": false
+}

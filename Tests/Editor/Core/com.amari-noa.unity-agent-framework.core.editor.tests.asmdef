@@ -1,0 +1,25 @@
+{
+    "name": "com.amari-noa.unity-agent-framework.core.editor.tests",
+    "rootNamespace": "com.amari_noa.unity_agent_framework.core.editor.tests",
+    "references": [
+        "com.amari-noa.unity-agent-framework.sdk",
+        "com.amari-noa.unity-agent-framework.core.editor",
+        "UnityEngine.TestRunner",
+        "UnityEditor.TestRunner"
+    ],
+    "includePlatforms": [
+        "Editor"
+    ],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": true,
+    "precompiledReferences": [
+        "nunit.framework.dll"
+    ],
+    "autoReferenced": false,
+    "defineConstraints": [
+        "UNITY_INCLUDE_TESTS"
+    ],
+    "versionDefines": [],
+    "noEngineReferences": false
+}
