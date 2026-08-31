@@ -5,6 +5,7 @@ using System.Diagnostics;
 using System.IO;
 using System.Net;
 using System.Net.Sockets;
+using com.amari_noa.unity_agent_framework.sdk.contracts;
 using UnityEditor;
 using UnityEngine;
 

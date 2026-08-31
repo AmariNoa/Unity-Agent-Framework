@@ -1,30 +1,12 @@
 #nullable enable
 
-using System;
 using System.IO;
+using com.amari_noa.unity_agent_framework.sdk.contracts;
 using com.amari_noa.unity_agent_framework.sdk.serialization;
 
 namespace com.amari_noa.unity_agent_framework.core.editor
 {
-    /// <summary>
-    /// Instance descriptor payload (design doc section 51; superset of the official
-    /// pipeline fields). Written under Library/UnityAgent/ so it is never committed.
-    /// </summary>
-    public sealed class AgentInstanceDescriptor
-    {
-        public int Pid { get; set; }
-        public int Port { get; set; }
-        public string? ProjectPath { get; set; }
-        public string? ProjectName { get; set; }
-        public string? UnityVersion { get; set; }
-        public string? Mode { get; set; }
-        public DateTimeOffset StartedAt { get; set; }
-        public string? FrameworkVersion { get; set; }
-        public string? ProtocolVersion { get; set; }
-        public string? Token { get; set; }
-    }
-
-    /// <summary>Writes and removes the instance descriptor file.</summary>
+    /// <summary>Writes and removes the instance descriptor file (contract type: AgentInstanceDescriptor).</summary>
     public static class AgentInstanceDescriptorFile
     {
         public const string RelativePath = "Library/UnityAgent/instance.json";

@@ -1,6 +1,7 @@
 using System;
 using System.IO;
 using com.amari_noa.unity_agent_framework.core.editor;
+using com.amari_noa.unity_agent_framework.sdk.contracts;
 using NUnit.Framework;
 
 namespace com.amari_noa.unity_agent_framework.core.editor.tests
