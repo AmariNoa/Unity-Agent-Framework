@@ -4,6 +4,7 @@ using System.Net.Http;
 using System.Net.Http.Headers;
 using System.Net.Sockets;
 using com.amari_noa.unity_agent_framework.core.editor;
+using com.amari_noa.unity_agent_framework.sdk.contracts;
 using NUnit.Framework;
 
 namespace com.amari_noa.unity_agent_framework.core.editor.tests
@@ -13,6 +14,7 @@ namespace com.amari_noa.unity_agent_framework.core.editor.tests
         private const string Token = "0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef";
 
         private AgentHttpServer _server;
+        private AgentToolRegistry _registry;
         private HttpClient _client;
         private string _baseUrl;
 
@@ -24,7 +26,9 @@ namespace com.amari_noa.unity_agent_framework.core.editor.tests
             var port = ((IPEndPoint)probe.LocalEndpoint).Port;
             probe.Stop();
 
-            _server = new AgentHttpServer(port, Token, "2022.3.22f1", "0.1.0-test");
+            _registry = new AgentToolRegistry();
+            _server = new AgentHttpServer(
+                port, Token, "2022.3.22f1", "0.1.0-test", new AgentToolExecutor(_registry));
             _server.Start();
             _baseUrl = $"http://127.0.0.1:{port}";
             _client = new HttpClient { Timeout = TimeSpan.FromSeconds(10) };
@@ -124,6 +128,36 @@ namespace com.amari_noa.unity_agent_framework.core.editor.tests
             StringAssert.Contains("\"success\":false", body);
             StringAssert.Contains("\"code\":\"TOOL_NOT_FOUND\"", body);
             StringAssert.Contains("unity.scene.list", body);
+        }
+
+        [Test]
+        public void InvokesRegisteredBackgroundToolsOverHttp()
+        {
+            _registry.RegisterTool(new AgentToolDescriptor
+            {
+                Id = "unity.test.get",
+                Provider = "core",
+                ExecutionContext = AgentToolExecutionContext.Background,
+                Mutation = AgentToolMutation.None,
+            },
+            invocation => new AgentResult<object> { Success = true, Result = "pong" });
+
+            var response = Send(HttpMethod.Post, "/api/invoke", body: "{\"tool\":\"unity.test.get\"}");
+
+            Assert.That(response.StatusCode, Is.EqualTo(HttpStatusCode.OK));
+            var body = ReadBody(response);
+            StringAssert.Contains("\"success\":true", body);
+            StringAssert.Contains("\"result\":\"pong\"", body);
+            StringAssert.Contains("\"executionTimeMs\"", body);
+        }
+
+        [Test]
+        public void ReturnsInvalidArgumentForBodiesWithoutToolId()
+        {
+            var response = Send(HttpMethod.Post, "/api/invoke", body: "{}");
+
+            Assert.That(response.StatusCode, Is.EqualTo(HttpStatusCode.OK));
+            StringAssert.Contains("\"code\":\"INVALID_ARGUMENT\"", ReadBody(response));
         }
 
         [Test]

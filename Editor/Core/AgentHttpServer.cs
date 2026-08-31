@@ -26,16 +26,19 @@ namespace com.amari_noa.unity_agent_framework.core.editor
         private readonly string _token;
         private readonly string _unityVersion;
         private readonly string _frameworkVersion;
+        private readonly AgentToolExecutor _executor;
         private CancellationTokenSource? _cts;
 
         public int Port { get; }
 
-        public AgentHttpServer(int port, string token, string unityVersion, string frameworkVersion)
+        public AgentHttpServer(
+            int port, string token, string unityVersion, string frameworkVersion, AgentToolExecutor executor)
         {
             Port = port;
             _token = token ?? throw new ArgumentNullException(nameof(token));
             _unityVersion = unityVersion;
             _frameworkVersion = frameworkVersion;
+            _executor = executor ?? throw new ArgumentNullException(nameof(executor));
             _listener.Prefixes.Add($"http://127.0.0.1:{port}/");
         }
 
@@ -128,8 +131,7 @@ namespace com.amari_noa.unity_agent_framework.core.editor
 
             if (method == "GET" && path == "/api/tools")
             {
-                // The tool registry arrives in Phase 2; an empty list is valid discovery output.
-                WriteEnvelope(context, 200, Success(new List<AgentToolDescriptor>()));
+                WriteEnvelope(context, 200, Success(_executor.Registry.ListDescriptors()));
                 return;
             }
 
@@ -141,13 +143,17 @@ namespace com.amari_noa.unity_agent_framework.core.editor
                     body = reader.ReadToEnd();
                 }
 
-                var toolId = TryReadToolId(body);
-                WriteEnvelope(context, 200, Failure(
-                    AgentErrorCodes.ToolNotFound,
-                    toolId == null
-                        ? "Request body must contain a tool id."
-                        : $"Tool '{toolId}' is not registered.",
-                    retryable: false));
+                var invocation = AgentToolExecutor.ParseRequest(body);
+                if (invocation == null)
+                {
+                    WriteEnvelope(context, 200, Failure(
+                        AgentErrorCodes.InvalidArgument,
+                        "Request body must be a JSON object with a 'tool' id.",
+                        retryable: false));
+                    return;
+                }
+
+                WriteEnvelope(context, 200, _executor.Invoke(invocation));
                 return;
             }
 
@@ -165,24 +171,6 @@ namespace com.amari_noa.unity_agent_framework.core.editor
             }
 
             return AgentTokenStore.ConstantTimeEquals(header.Substring(prefix.Length), _token);
-        }
-
-        private static string? TryReadToolId(string body)
-        {
-            if (string.IsNullOrWhiteSpace(body))
-            {
-                return null;
-            }
-
-            try
-            {
-                var request = AgentJson.Deserialize<InvokeRequest>(body);
-                return string.IsNullOrEmpty(request?.Tool) ? null : request!.Tool;
-            }
-            catch (Exception)
-            {
-                return null;
-            }
         }
 
         private static AgentResult<T> Success<T>(T payload)
@@ -225,12 +213,6 @@ namespace com.amari_noa.unity_agent_framework.core.editor
             {
                 // The client may already be gone; nothing meaningful can be reported here.
             }
-        }
-
-        /// <summary>Invoke request body (canonical field names; Phase 2 adds parameters handling).</summary>
-        private sealed class InvokeRequest
-        {
-            public string? Tool { get; set; }
         }
     }
 }

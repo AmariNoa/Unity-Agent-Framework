@@ -22,9 +22,14 @@ namespace com.amari_noa.unity_agent_framework.core.editor
         private const string PortSessionKey = "UnityAgentFramework.Port";
 
         private static AgentHttpServer? _server;
+        private static AgentToolExecutor? _executor;
+
+        /// <summary>The live registry (rebuilt after every domain reload).</summary>
+        public static AgentToolRegistry Registry { get; } = new AgentToolRegistry();
 
         static AgentCoreBootstrap()
         {
+            AgentConsoleLogCollector.Initialize();
             EditorApplication.update += OnUpdate;
             AssemblyReloadEvents.beforeAssemblyReload += OnBeforeAssemblyReload;
             EditorApplication.quitting += OnQuitting;
@@ -50,7 +55,11 @@ namespace com.amari_noa.unity_agent_framework.core.editor
                 var port = ResolvePort();
                 var frameworkVersion = ResolveFrameworkVersion();
 
-                var server = new AgentHttpServer(port, token, Application.unityVersion, frameworkVersion);
+                AgentToolProviderDiscovery.RegisterAll(Registry);
+                _executor = new AgentToolExecutor(Registry);
+
+                var server = new AgentHttpServer(
+                    port, token, Application.unityVersion, frameworkVersion, _executor);
                 server.Start();
                 _server = server;
                 SessionState.SetInt(PortSessionKey, port);
