@@ -66,7 +66,7 @@ namespace com.amari_noa.unity_agent_framework.core.editor
                 SessionState.SetInt(PortSessionKey, port);
 
                 var projectRoot = Directory.GetParent(Application.dataPath)!.FullName;
-                AgentInstanceDescriptorFile.Write(projectRoot, new AgentInstanceDescriptor
+                var descriptor = new AgentInstanceDescriptor
                 {
                     Pid = Process.GetCurrentProcess().Id,
                     Port = port,
@@ -78,7 +78,10 @@ namespace com.amari_noa.unity_agent_framework.core.editor
                     FrameworkVersion = frameworkVersion,
                     ProtocolVersion = AgentProtocol.Version,
                     Token = token,
-                });
+                };
+                AgentInstanceDescriptorFile.Write(projectRoot, descriptor);
+                AgentMachineRegistry.Write(descriptor);
+                GatewayBinaryMirror.EnsureMirrored(projectRoot);
 
                 UnityEngine.Debug.Log($"[UnityAgentFramework] Agent HTTP server listening on 127.0.0.1:{port}");
             }
@@ -101,10 +104,11 @@ namespace com.amari_noa.unity_agent_framework.core.editor
             {
                 var projectRoot = Directory.GetParent(Application.dataPath)!.FullName;
                 AgentInstanceDescriptorFile.Delete(projectRoot);
+                AgentMachineRegistry.Delete(projectRoot);
             }
             catch (Exception)
             {
-                // Best effort cleanup; the descriptor becomes stale but harmless.
+                // Best effort cleanup; readers drop stale entries via PID checks.
             }
         }
 
