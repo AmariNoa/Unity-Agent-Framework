@@ -15,7 +15,9 @@ namespace com.amari_noa.unity_agent_framework.core.editor
     /// Starts the local HTTP server when the editor loads and keeps the instance
     /// descriptor up to date. The server is stopped before assembly reloads
     /// (the gateway reconnects with backoff; design doc section 22) and the
-    /// descriptor is removed when the editor quits.
+    /// descriptor is removed when the editor quits. Lifecycle events are also
+    /// written to <see cref="AgentBootstrapLog"/> so a server that did not come
+    /// back after a reload can be diagnosed later.
     /// </summary>
     [InitializeOnLoad]
     public static class AgentCoreBootstrap
@@ -35,7 +37,10 @@ namespace com.amari_noa.unity_agent_framework.core.editor
             AssemblyReloadEvents.beforeAssemblyReload += OnBeforeAssemblyReload;
             EditorApplication.quitting += OnQuitting;
             EditorApplication.delayCall += StartServer;
+            AgentBootstrapLog.Append(ProjectRoot, "domain loaded; StartServer scheduled via delayCall");
         }
+
+        private static string ProjectRoot => Directory.GetParent(Application.dataPath)!.FullName;
 
         private static void OnUpdate()
         {
@@ -47,9 +52,11 @@ namespace com.amari_noa.unity_agent_framework.core.editor
         {
             if (_server != null)
             {
+                AgentBootstrapLog.Append(ProjectRoot, $"StartServer skipped; already listening on port {_server.Port}");
                 return;
             }
 
+            AgentBootstrapLog.Append(ProjectRoot, $"StartServer invoked; state={AgentEditorStateTracker.Current}");
             try
             {
                 var token = AgentTokenStore.GetOrCreate();
@@ -65,7 +72,7 @@ namespace com.amari_noa.unity_agent_framework.core.editor
                 _server = server;
                 SessionState.SetInt(PortSessionKey, port);
 
-                var projectRoot = Directory.GetParent(Application.dataPath)!.FullName;
+                var projectRoot = ProjectRoot;
                 var descriptor = new AgentInstanceDescriptor
                 {
                     Pid = Process.GetCurrentProcess().Id,
@@ -84,25 +91,27 @@ namespace com.amari_noa.unity_agent_framework.core.editor
                 GatewayBinaryMirror.EnsureMirrored(projectRoot);
 
                 UnityEngine.Debug.Log($"[UnityAgentFramework] Agent HTTP server listening on 127.0.0.1:{port}");
+                AgentBootstrapLog.Append(projectRoot, $"server started; port={port} frameworkVersion={frameworkVersion}");
             }
             catch (Exception e)
             {
                 UnityEngine.Debug.LogError($"[UnityAgentFramework] Failed to start the agent HTTP server: {e.Message}");
+                AgentBootstrapLog.Append(ProjectRoot, $"StartServer failed: {e.GetType().FullName}: {e.Message}\n{e.StackTrace}");
             }
         }
 
         private static void OnBeforeAssemblyReload()
         {
             AgentEditorStateTracker.Set(AgentEditorState.Reloading);
-            StopServer();
+            StopServer("beforeAssemblyReload");
         }
 
         private static void OnQuitting()
         {
-            StopServer();
+            StopServer("quitting");
             try
             {
-                var projectRoot = Directory.GetParent(Application.dataPath)!.FullName;
+                var projectRoot = ProjectRoot;
                 AgentInstanceDescriptorFile.Delete(projectRoot);
                 AgentMachineRegistry.Delete(projectRoot);
             }
@@ -112,20 +121,24 @@ namespace com.amari_noa.unity_agent_framework.core.editor
             }
         }
 
-        private static void StopServer()
+        private static void StopServer(string reason)
         {
             if (_server == null)
             {
+                AgentBootstrapLog.Append(ProjectRoot, $"StopServer ({reason}); no server was running");
                 return;
             }
 
+            var port = _server.Port;
             try
             {
                 _server.Stop();
+                AgentBootstrapLog.Append(ProjectRoot, $"StopServer ({reason}); stopped port={port}");
             }
-            catch (Exception)
+            catch (Exception e)
             {
                 // Shutting down; a failing listener must not block the reload.
+                AgentBootstrapLog.Append(ProjectRoot, $"StopServer ({reason}); Stop threw {e.GetType().FullName}: {e.Message}");
             }
 
             _server = null;
