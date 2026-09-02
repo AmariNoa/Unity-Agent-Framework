@@ -18,3 +18,4 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Gateway installation check with console guidance and README setup instructions
 - Machine-level instance registry (LocalAppData) so one gateway registration can discover every running editor, and a gateway binary mirror keeping a stable project-independent "current" path for MCP registrations
 - Bootstrap diagnostic log (Library/UnityAgent/bootstrap.log, one rotation generation) recording domain load, server start / stop and startup failures with pid and timestamp, to diagnose a server that did not come back after a domain reload
+- Bootstrap diagnostic log also records the first EditorApplication.update tick after a domain load and the editor focus state, to tell whether the update loop ran while the server was still down

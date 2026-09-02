@@ -7,6 +7,7 @@ using System.Net;
 using System.Net.Sockets;
 using com.amari_noa.unity_agent_framework.sdk.contracts;
 using UnityEditor;
+using UnityEditorInternal;
 using UnityEngine;
 
 namespace com.amari_noa.unity_agent_framework.core.editor
@@ -26,6 +27,7 @@ namespace com.amari_noa.unity_agent_framework.core.editor
 
         private static AgentHttpServer? _server;
         private static AgentToolExecutor? _executor;
+        private static bool _firstUpdateLogged;
 
         /// <summary>The live registry (rebuilt after every domain reload).</summary>
         public static AgentToolRegistry Registry { get; } = new AgentToolRegistry();
@@ -37,15 +39,28 @@ namespace com.amari_noa.unity_agent_framework.core.editor
             AssemblyReloadEvents.beforeAssemblyReload += OnBeforeAssemblyReload;
             EditorApplication.quitting += OnQuitting;
             EditorApplication.delayCall += StartServer;
-            AgentBootstrapLog.Append(ProjectRoot, "domain loaded; StartServer scheduled via delayCall");
+            AgentBootstrapLog.Append(ProjectRoot, $"domain loaded; StartServer scheduled via delayCall focused={IsEditorFocused}");
         }
 
         private static string ProjectRoot => Directory.GetParent(Application.dataPath)!.FullName;
+
+        /// <summary>Whether the editor window currently has OS focus (diagnostic only).</summary>
+        private static bool IsEditorFocused => InternalEditorUtility.isApplicationActive;
 
         private static void OnUpdate()
         {
             AgentEditorStateTracker.RefreshFromMainThread();
             MainThreadDispatcher.PumpOnce();
+
+            // Recorded once per domain to tell whether the update loop runs at all
+            // (e.g. while the editor is unfocused) before delayCall started the server.
+            if (!_firstUpdateLogged)
+            {
+                _firstUpdateLogged = true;
+                AgentBootstrapLog.Append(
+                    ProjectRoot,
+                    $"first update tick; state={AgentEditorStateTracker.Current} server={(_server != null ? "listening" : "none")} focused={IsEditorFocused}");
+            }
         }
 
         private static void StartServer()
@@ -56,7 +71,7 @@ namespace com.amari_noa.unity_agent_framework.core.editor
                 return;
             }
 
-            AgentBootstrapLog.Append(ProjectRoot, $"StartServer invoked; state={AgentEditorStateTracker.Current}");
+            AgentBootstrapLog.Append(ProjectRoot, $"StartServer invoked; state={AgentEditorStateTracker.Current} focused={IsEditorFocused}");
             try
             {
                 var token = AgentTokenStore.GetOrCreate();
