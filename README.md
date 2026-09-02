@@ -31,6 +31,7 @@ v0.1 実装フェーズ。Core 基盤 (Tool Registry / HTTP サーバー / Read 
    }
 
 4. Unity Editor を開いた状態で MCP Client から接続すると、unity.project.info / unity.scene.list / unity.object.inspect / unity.selection.get / unity.console.get が利用できる (MCP 上の名前はドット→アンダースコア変換)。
+5. 接続できない場合は、Unity プロジェクトの Library/UnityAgent/bootstrap.log (Editor 側 HTTP サーバーの起動・停止・失敗の記録) を確認する。
 
 ## Planned components
 
