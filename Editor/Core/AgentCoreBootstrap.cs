@@ -28,6 +28,8 @@ namespace com.amari_noa.unity_agent_framework.core.editor
         private static AgentHttpServer? _server;
         private static AgentToolExecutor? _executor;
         private static bool _firstUpdateLogged;
+        private static bool _isQuitting;
+        private static readonly AgentServerRestartPolicy RestartPolicy = new AgentServerRestartPolicy();
 
         /// <summary>The live registry (rebuilt after every domain reload).</summary>
         public static AgentToolRegistry Registry { get; } = new AgentToolRegistry();
@@ -38,7 +40,7 @@ namespace com.amari_noa.unity_agent_framework.core.editor
             EditorApplication.update += OnUpdate;
             AssemblyReloadEvents.beforeAssemblyReload += OnBeforeAssemblyReload;
             EditorApplication.quitting += OnQuitting;
-            EditorApplication.delayCall += StartServer;
+            EditorApplication.delayCall += () => StartServer(viaWatchdog: false);
             AgentBootstrapLog.Append(ProjectRoot, $"domain loaded; StartServer scheduled via delayCall focused={IsEditorFocused}");
         }
 
@@ -61,9 +63,22 @@ namespace com.amari_noa.unity_agent_framework.core.editor
                     ProjectRoot,
                     $"first update tick; state={AgentEditorStateTracker.Current} server={(_server != null ? "listening" : "none")} focused={IsEditorFocused}");
             }
+
+            // Watchdog: recover from a delayCall that never ran (e.g. the editor
+            // window was unfocused when the domain finished loading). Runs only
+            // while the editor is idle and not shutting down, and is throttled by
+            // RestartPolicy so a persistently failing start does not retry every frame.
+            if (_server == null && !_isQuitting && AgentEditorStateTracker.Current == AgentEditorState.Ready)
+            {
+                var now = EditorApplication.timeSinceStartup;
+                if (RestartPolicy.ShouldAttempt(now))
+                {
+                    StartServer(viaWatchdog: true);
+                }
+            }
         }
 
-        private static void StartServer()
+        private static void StartServer(bool viaWatchdog = false)
         {
             if (_server != null)
             {
@@ -71,7 +86,8 @@ namespace com.amari_noa.unity_agent_framework.core.editor
                 return;
             }
 
-            AgentBootstrapLog.Append(ProjectRoot, $"StartServer invoked; state={AgentEditorStateTracker.Current} focused={IsEditorFocused}");
+            var trigger = viaWatchdog ? "StartServer invoked via watchdog" : "StartServer invoked";
+            AgentBootstrapLog.Append(ProjectRoot, $"{trigger}; state={AgentEditorStateTracker.Current} focused={IsEditorFocused}");
             try
             {
                 var token = AgentTokenStore.GetOrCreate();
@@ -107,11 +123,26 @@ namespace com.amari_noa.unity_agent_framework.core.editor
 
                 UnityEngine.Debug.Log($"[UnityAgentFramework] Agent HTTP server listening on 127.0.0.1:{port}");
                 AgentBootstrapLog.Append(projectRoot, $"server started; port={port} frameworkVersion={frameworkVersion}");
+                RestartPolicy.RecordSuccess();
             }
             catch (Exception e)
             {
                 UnityEngine.Debug.LogError($"[UnityAgentFramework] Failed to start the agent HTTP server: {e.Message}");
                 AgentBootstrapLog.Append(ProjectRoot, $"StartServer failed: {e.GetType().FullName}: {e.Message}\n{e.StackTrace}");
+
+                RestartPolicy.RecordFailure(EditorApplication.timeSinceStartup);
+                if (RestartPolicy.GaveUp)
+                {
+                    const string giveUpMessage = "watchdog gave up after 10 consecutive failures";
+                    AgentBootstrapLog.Append(ProjectRoot, giveUpMessage);
+                    UnityEngine.Debug.LogError($"[UnityAgentFramework] {giveUpMessage}");
+                }
+                else
+                {
+                    AgentBootstrapLog.Append(
+                        ProjectRoot,
+                        $"watchdog will retry in {RestartPolicy.LastDelaySeconds:0}s (failure {RestartPolicy.ConsecutiveFailures}/{AgentServerRestartPolicy.MaxConsecutiveFailures})");
+                }
             }
         }
 
@@ -121,8 +152,31 @@ namespace com.amari_noa.unity_agent_framework.core.editor
             StopServer("beforeAssemblyReload");
         }
 
+        /// <summary>Stops (if running) and restarts the server, clearing any watchdog give-up state.</summary>
+        public static void RestartServer()
+        {
+            AgentBootstrapLog.Append(ProjectRoot, "manual restart requested");
+            if (_server != null)
+            {
+                StopServer("manual restart");
+            }
+
+            RestartPolicy.Reset();
+            StartServer(viaWatchdog: false);
+
+            if (_server != null)
+            {
+                UnityEngine.Debug.Log($"[UnityAgentFramework] Agent HTTP server restarted on 127.0.0.1:{_server.Port}");
+            }
+            else
+            {
+                UnityEngine.Debug.LogError("[UnityAgentFramework] Manual restart failed; see bootstrap.log for details.");
+            }
+        }
+
         private static void OnQuitting()
         {
+            _isQuitting = true;
             StopServer("quitting");
             try
             {
